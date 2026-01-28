@@ -117,4 +117,355 @@ class UIManager {
     // Toggle mobile menu
     toggleMobileMenu(show) {
         const navbar = document.querySelector('.navbar-collapse');
-        const toggler = document.querySelector('.navbar-togg
+        const toggler = document.querySelector('.navbar-toggler');
+        
+        if (navbar) {
+            if (typeof show === 'boolean') {
+                navbar.classList.toggle('show', show);
+            } else {
+                navbar.classList.toggle('show');
+            }
+            
+            // Update toggler icon
+            if (toggler) {
+                const icon = toggler.querySelector('i');
+                if (icon) {
+                    icon.className = navbar.classList.contains('show') ? 
+                        'fas fa-times' : 'fas fa-bars';
+                }
+            }
+        }
+    }
+    
+    // Toggle back to top button
+    toggleBackToTopButton() {
+        const btn = document.getElementById('backToTop');
+        if (!btn) {
+            // Create button if it doesn't exist
+            const buttonHTML = `
+                <button id="backToTop" class="back-to-top">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            `;
+            document.body.insertAdjacentHTML('beforeend', buttonHTML);
+            
+            // Add styles
+            this.addBackToTopStyles();
+            
+            // Add click event
+            document.getElementById('backToTop').addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+        
+        // Show/hide based on scroll position
+        const scrollBtn = document.getElementById('backToTop');
+        if (window.scrollY > 300) {
+            scrollBtn.style.opacity = '1';
+            scrollBtn.style.visibility = 'visible';
+        } else {
+            scrollBtn.style.opacity = '0';
+            scrollBtn.style.visibility = 'hidden';
+        }
+    }
+    
+    // Add back to top button styles
+    addBackToTopStyles() {
+        if (!document.getElementById('back-to-top-styles')) {
+            const styles = `
+                <style>
+                    .back-to-top {
+                        position: fixed;
+                        bottom: 30px;
+                        right: 30px;
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 50%;
+                        background: var(--color-primary);
+                        color: white;
+                        border: none;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.2rem;
+                        box-shadow: var(--box-shadow-lg);
+                        transition: all var(--transition-normal);
+                        opacity: 0;
+                        visibility: hidden;
+                        z-index: 100;
+                    }
+                    .back-to-top:hover {
+                        background: var(--color-accent);
+                        transform: translateY(-3px);
+                    }
+                </style>
+            `;
+            document.head.insertAdjacentHTML('beforeend', styles);
+        }
+    }
+    
+    // Handle keyboard shortcuts
+    handleKeyboardShortcuts(e) {
+        // Don't trigger shortcuts when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        // Ctrl/Cmd + K for search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const searchInput = document.querySelector('input[name="keywords"]');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
+        
+        // Escape to close modals
+        if (e.key === 'Escape') {
+            this.closeAllModals();
+        }
+        
+        // Alt + T for theme toggle
+        if (e.altKey && e.key === 't') {
+            e.preventDefault();
+            this.toggleTheme();
+        }
+    }
+    
+    // Close all modals
+    closeAllModals() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.remove();
+        });
+    }
+    
+    // Show loading overlay
+    showLoadingOverlay(message = 'Loading...') {
+        const overlayHTML = `
+            <div class="loading-overlay">
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing overlay
+        this.hideLoadingOverlay();
+        
+        // Add new overlay
+        document.body.insertAdjacentHTML('beforeend', overlayHTML);
+        
+        // Add styles if not present
+        this.addOverlayStyles();
+    }
+    
+    // Hide loading overlay
+    hideLoadingOverlay() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.remove();
+    }
+    
+    // Add overlay styles
+    addOverlayStyles() {
+        if (!document.getElementById('overlay-styles')) {
+            const styles = `
+                <style>
+                    .loading-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(255, 255, 255, 0.95);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                    }
+                    .loading-content {
+                        text-align: center;
+                    }
+                    .spinner {
+                        width: 50px;
+                        height: 50px;
+                        border: 5px solid var(--color-bg);
+                        border-top: 5px solid var(--color-primary);
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto 20px;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            document.head.insertAdjacentHTML('beforeend', styles);
+        }
+    }
+    
+    // Create toast notification
+    showToast(message, type = 'info', duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas ${this.getToastIcon(type)}"></i>
+                <span>${message}</span>
+            </div>
+            <button class="toast-close">&times;</button>
+        `;
+        
+        // Add to toast container
+        const container = document.querySelector('.toast-container') || this.createToastContainer();
+        container.appendChild(toast);
+        
+        // Add styles if not present
+        this.addToastStyles();
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // Auto remove
+        setTimeout(() => {
+            this.removeToast(toast);
+        }, duration);
+        
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            this.removeToast(toast);
+        });
+    }
+    
+    // Remove toast
+    removeToast(toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+    
+    // Get toast icon
+    getToastIcon(type) {
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+        return icons[type] || 'fa-info-circle';
+    }
+    
+    // Create toast container
+    createToastContainer() {
+        const container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    // Add toast styles
+    addToastStyles() {
+        if (!document.getElementById('toast-styles')) {
+            const styles = `
+                <style>
+                    .toast-container {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 9998;
+                    }
+                    .toast {
+                        background: white;
+                        border-radius: var(--border-radius-md);
+                        box-shadow: var(--box-shadow-lg);
+                        padding: 15px 20px;
+                        margin-bottom: 10px;
+                        min-width: 300px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        transform: translateX(100%);
+                        opacity: 0;
+                        transition: all 0.3s ease;
+                    }
+                    .toast.show {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    .toast-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .toast-success {
+                        border-left: 4px solid var(--color-success);
+                    }
+                    .toast-error {
+                        border-left: 4px solid var(--color-error);
+                    }
+                    .toast-warning {
+                        border-left: 4px solid var(--color-warning);
+                    }
+                    .toast-info {
+                        border-left: 4px solid var(--color-info);
+                    }
+                    .toast-close {
+                        background: none;
+                        border: none;
+                        font-size: 1.2rem;
+                        cursor: pointer;
+                        color: var(--color-gray-dark);
+                    }
+                </style>
+            `;
+            document.head.insertAdjacentHTML('beforeend', styles);
+        }
+    }
+    
+    // Debounce function
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Throttle function
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+    
+    // Show notification
+    showNotification(title, message, type = 'info') {
+        this.showToast(`${title}: ${message}`, type);
+    }
+}
+
+// Export for global use
+window.UIManager = UIManager;
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.jobPortal) {
+        window.jobPortal.uiManager = new UIManager();
+    }
+});
