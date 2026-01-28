@@ -1,0 +1,120 @@
+/**
+ * UI Module - UI components, animations, and interactions
+ */
+
+class UIManager {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.initAnimations();
+        this.initThemeSwitcher();
+        this.initMobileMenu();
+    }
+    
+    // Setup event listeners
+    setupEventListeners() {
+        // Back to top button
+        window.addEventListener('scroll', this.debounce(() => {
+            this.toggleBackToTopButton();
+        }, 100));
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            this.handleKeyboardShortcuts(e);
+        });
+    }
+    
+    // Initialize animations
+    initAnimations() {
+        // Intersection Observer for scroll animations
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            // Observe elements with animation classes
+            document.querySelectorAll('.fade-in, .slide-up, .slide-left, .slide-right').forEach(el => {
+                observer.observe(el);
+            });
+        }
+    }
+    
+    // Initialize theme switcher
+    initThemeSwitcher() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                this.toggleTheme();
+            });
+        }
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        this.setTheme(savedTheme);
+    }
+    
+    // Toggle theme
+    toggleTheme() {
+        const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        this.setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        this.showNotification(
+            'Theme Changed',
+            `Switched to ${newTheme === 'dark' ? 'Dark' : 'Light'} mode`,
+            'info'
+        );
+    }
+    
+    // Set theme
+    setTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+        
+        // Update theme toggle button if exists
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+    }
+    
+    // Initialize mobile menu
+    initMobileMenu() {
+        const toggler = document.querySelector('.navbar-toggler');
+        if (toggler) {
+            toggler.addEventListener('click', () => {
+                this.toggleMobileMenu();
+            });
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.navbar') && 
+                !e.target.closest('.navbar-toggler') &&
+                document.querySelector('.navbar-collapse.show')) {
+                this.toggleMobileMenu(false);
+            }
+        });
+    }
+    
+    // Toggle mobile menu
+    toggleMobileMenu(show) {
+        const navbar = document.querySelector('.navbar-collapse');
+        const toggler = document.querySelector('.navbar-togg
