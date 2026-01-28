@@ -1,0 +1,272 @@
+/* Payment page specific styles */
+
+.payment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.payment-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.payment-method-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+    height: 100%;
+}
+
+.payment-method-card:hover {
+    border-color: #2563eb;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+}
+
+.payment-method-card.selected {
+    border-color: #2563eb;
+    background-color: #f0f7ff;
+}
+
+.payment-method-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.payment-method-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.payment-amount-input {
+    position: relative;
+}
+
+.payment-amount-input .currency {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    color: #666;
+}
+
+.payment-amount-input input {
+    padding-left: 40px;
+}
+
+.payment-security {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #10b981;
+}
+
+.payment-security i {
+    color: #10b981;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.payment-process {
+    position: relative;
+    padding: 20px 0;
+}
+
+.payment-process-step {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.payment-process-step .step-number {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    color: #64748b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+}
+
+.payment-process-step.active .step-number {
+    background: #2563eb;
+    color: white;
+}
+
+.payment-process-step.completed .step-number {
+    background: #10b981;
+    color: white;
+}
+
+.payment-process::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 0;
+}
+
+.payment-summary {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.payment-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.payment-summary-item.total {
+    font-size: 1.2em;
+    font-weight: bold;
+    border-bottom: none;
+    color: #2563eb;
+}
+
+.payment-countdown {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.payment-countdown-timer {
+    font-size: 2em;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.payment-qr-code {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    border: 2px dashed #e2e8f0;
+}
+
+.payment-qr-code img {
+    max-width: 200px;
+    margin: 0 auto 15px;
+}
+
+/* Ethiopian payment specific */
+.payment-ethiopian {
+    border: 2px solid #f59e0b;
+    background: linear-gradient(45deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.1));
+}
+
+.payment-ethiopian .payment-method-icon {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.payment-telebirr {
+    border-color: #059669;
+    background: linear-gradient(45deg, rgba(5, 150, 105, 0.05), rgba(5, 150, 105, 0.1));
+}
+
+.payment-cbe {
+    border-color: #dc2626;
+    background: linear-gradient(45deg, rgba(220, 38, 38, 0.05), rgba(220, 38, 38, 0.1));
+}
+
+/* International payment */
+.payment-international {
+    border: 2px solid #2563eb;
+    background: linear-gradient(45deg, rgba(37, 99, 235, 0.05), rgba(37, 99, 235, 0.1));
+}
+
+/* Loading animation */
+.payment-loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+}
+
+.payment-loading.active {
+    display: block;
+}
+
+.payment-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Receipt styles */
+.payment-receipt {
+    font-family: 'Courier New', monospace;
+    background: white;
+    padding: 30px;
+    border: 1px solid #000;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.payment-receipt-header {
+    text-align: center;
+    border-bottom: 2px dashed #000;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.payment-receipt-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.payment-receipt-divider {
+    border-top: 1px dashed #000;
+    margin: 20px 0;
+}
+
+/* Responsive payment */
+@media (max-width: 768px) {
+    .payment-method-card {
+        padding: 15px;
+    }
+    
+    .payment-method-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .payment-process::before {
+        left: 5%;
+        right: 5%;
+    }
+}
