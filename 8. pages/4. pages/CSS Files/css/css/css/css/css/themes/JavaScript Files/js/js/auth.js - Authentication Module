@@ -1,0 +1,594 @@
+/**
+ * Authentication Module - User authentication and management
+ */
+
+class AuthManager {
+    constructor() {
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        this.authToken = null;
+        this.init();
+    }
+    
+    init() {
+        this.checkAuthStatus();
+        this.setupEventListeners();
+    }
+    
+    // Check authentication status
+    checkAuthStatus() {
+        const token = localStorage.getItem('authToken');
+        const user = localStorage.getItem('user');
+        
+        if (token && user) {
+            this.authToken = token;
+            this.currentUser = JSON.parse(user);
+            this.isAuthenticated = true;
+            this.updateAuthUI();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // Login user
+    async login(email, password, accountType = 'job_seeker') {
+        try {
+            // Show loading state
+            this.showLoading(true);
+            
+            // Simulate API call
+            const response = await this.mockLoginAPI(email, password, accountType);
+            
+            if (response.success) {
+                // Save user data
+                this.currentUser = response.user;
+                this.authToken = response.token;
+                this.isAuthenticated = true;
+                
+                // Save to localStorage
+                localStorage.setItem('authToken', response.token);
+                localStorage.setItem('user', JSON.stringify(response.user));
+                
+                // Update UI
+                this.updateAuthUI();
+                
+                // Show success message
+                this.showNotification('Login Successful', 'Welcome back!', 'success');
+                
+                // Close login modal if exists
+                this.closeLoginModal();
+                
+                return response.user;
+            } else {
+                throw new Error(response.message || 'Login failed');
+            }
+        } catch (error) {
+            this.showNotification('Login Failed', error.message, 'error');
+            throw error;
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    // Register new user
+    async register(userData) {
+        try {
+            this.showLoading(true);
+            
+            // Validate user data
+            if (!this.validateRegistration(userData)) {
+                throw new Error('Please fill in all required fields');
+            }
+            
+            // Check if email exists
+            if (this.userExists(userData.email)) {
+                throw new Error('Email already registered');
+            }
+            
+            // Simulate API call
+            const response = await this.mockRegisterAPI(userData);
+            
+            if (response.success) {
+                // Auto login after registration
+                return await this.login(userData.email, userData.password, userData.accountType);
+            } else {
+                throw new Error(response.message || 'Registration failed');
+            }
+        } catch (error) {
+            this.showNotification('Registration Failed', error.message, 'error');
+            throw error;
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    // Logout user
+    logout() {
+        // Clear local storage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        
+        // Reset state
+        this.currentUser = null;
+        this.authToken = null;
+        this.isAuthenticated = false;
+        
+        // Update UI
+        this.updateAuthUI();
+        
+        // Show notification
+        this.showNotification('Logged Out', 'You have been successfully logged out.', 'info');
+        
+        // Redirect to home page
+        window.location.href = '/';
+    }
+    
+    // Update user profile
+    async updateProfile(profileData) {
+        if (!this.isAuthenticated) {
+            throw new Error('Please login to update your profile');
+        }
+        
+        try {
+            this.showLoading(true);
+            
+            // Simulate API call
+            const response = await this.mockUpdateProfileAPI(profileData);
+            
+            if (response.success) {
+                // Update local user data
+                this.currentUser = { ...this.currentUser, ...profileData };
+                localStorage.setItem('user', JSON.stringify(this.currentUser));
+                
+                // Update UI
+                this.updateAuthUI();
+                
+                this.showNotification('Profile Updated', 'Your profile has been updated successfully.', 'success');
+                
+                return this.currentUser;
+            } else {
+                throw new Error(response.message || 'Profile update failed');
+            }
+        } catch (error) {
+            this.showNotification('Update Failed', error.message, 'error');
+            throw error;
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    // Check if user exists (mock)
+    userExists(email) {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        return users.some(user => user.email === email);
+    }
+    
+    // Validate registration data
+    validateRegistration(data) {
+        const required = ['name', 'email', 'password', 'accountType'];
+        return required.every(field => data[field] && data[field].trim());
+    }
+    
+    // Mock login API
+    async mockLoginAPI(email, password, accountType) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Mock validation
+                if (email && password) {
+                    const user = {
+                        id: Date.now(),
+                        name: email.split('@')[0],
+                        email,
+                        accountType,
+                        profileComplete: false,
+                        joinedDate: new Date().toISOString(),
+                        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=ff0042&color=fff`
+                    };
+                    
+                    resolve({
+                        success: true,
+                        user,
+                        token: `mock-token-${Date.now()}`
+                    });
+                } else {
+                    resolve({
+                        success: false,
+                        message: 'Invalid email or password'
+                    });
+                }
+            }, 1500);
+        });
+    }
+    
+    // Mock register API
+    async mockRegisterAPI(userData) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // Save user to local storage
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                users.push({
+                    ...userData,
+                    id: Date.now(),
+                    joinedDate: new Date().toISOString()
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                resolve({
+                    success: true,
+                    message: 'Registration successful'
+                });
+            }, 1500);
+        });
+    }
+    
+    // Mock update profile API
+    async mockUpdateProfileAPI(profileData) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    success: true,
+                    message: 'Profile updated'
+                });
+            }, 1000);
+        });
+    }
+    
+    // Update authentication UI
+    updateAuthUI() {
+        const loginBtn = document.querySelector('.login-btn');
+        const userMenu = document.querySelector('.user-menu');
+        const userName = document.querySelector('.user-name');
+        
+        if (this.isAuthenticated && this.currentUser) {
+            // Hide login button
+            if (loginBtn) loginBtn.style.display = 'none';
+            
+            // Show user menu
+            if (userMenu) {
+                userMenu.style.display = 'block';
+                if (userName) {
+                    userName.textContent = this.currentUser.name;
+                }
+                
+                // Update dropdown menu
+                this.updateUserDropdown();
+            }
+        } else {
+            // Show login button
+            if (loginBtn) loginBtn.style.display = 'block';
+            
+            // Hide user menu
+            if (userMenu) userMenu.style.display = 'none';
+        }
+        
+        // Dispatch auth change event
+        document.dispatchEvent(new CustomEvent('authChange', {
+            detail: { isAuthenticated: this.isAuthenticated, user: this.currentUser }
+        }));
+    }
+    
+    // Update user dropdown menu
+    updateUserDropdown() {
+        const dropdownMenu = document.querySelector('.user-menu .dropdown-menu');
+        if (dropdownMenu && this.currentUser) {
+            const profileCompletion = this.calculateProfileCompletion();
+            
+            dropdownMenu.innerHTML = `
+                <li>
+                    <div class="dropdown-item">
+                        <div class="d-flex align-items-center">
+                            <img src="${this.currentUser.avatar}" 
+                                 alt="${this.currentUser.name}" 
+                                 style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+                            <div>
+                                <strong>${this.currentUser.name}</strong>
+                                <div class="text-light" style="font-size: 0.8rem;">
+                                    ${this.currentUser.email}
+                                </div>
+                                <div class="mt-1">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-accent" 
+                                             style="width: ${profileCompletion}%"></div>
+                                    </div>
+                                    <small>Profile ${profileCompletion}% complete</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#profile"><i class="fas fa-user me-2"></i>My Profile</a></li>
+                <li><a class="dropdown-item" href="#applications"><i class="fas fa-file-alt me-2"></i>My Applications</a></li>
+                <li><a class="dropdown-item" href="#bookmarks"><i class="fas fa-bookmark me-2"></i>Bookmarked Jobs</a></li>
+                <li><a class="dropdown-item" href="#settings"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-primary logout-btn" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+            `;
+            
+            // Attach logout event
+            const logoutBtn = dropdownMenu.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
+            }
+        }
+    }
+    
+    // Calculate profile completion percentage
+    calculateProfileCompletion() {
+        if (!this.currentUser) return 0;
+        
+        const requiredFields = ['name', 'email', 'phone', 'location', 'skills'];
+        const completedFields = requiredFields.filter(field => 
+            this.currentUser[field] && this.currentUser[field].trim()
+        );
+        
+        return Math.round((completedFields.length / requiredFields.length) * 100);
+    }
+    
+    // Show login modal
+    showLoginModal() {
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal" id="authModal">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">Login / Register</h3>
+                            <button class="btn btn-small close-auth-modal">&times;</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="auth-tabs mb-4">
+                                <div class="d-flex">
+                                    <button class="btn btn-outline flex-fill auth-tab active" data-tab="login">Login</button>
+                                    <button class="btn btn-outline flex-fill auth-tab" data-tab="register">Register</button>
+                                </div>
+                            </div>
+                            
+                            <div id="loginForm" class="auth-form">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="loginEmail" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="loginPassword" required>
+                                    <div class="text-end mt-1">
+                                        <a href="#forgot-password" class="text-accent small">Forgot password?</a>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Account Type</label>
+                                    <select class="form-control" id="loginAccountType">
+                                        <option value="job_seeker">Job Seeker</option>
+                                        <option value="employer">Employer</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" id="loginSubmit">Login</button>
+                            </div>
+                            
+                            <div id="registerForm" class="auth-form" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" id="registerName" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="registerEmail" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="registerPassword" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="registerConfirmPassword" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Account Type</label>
+                                    <select class="form-control" id="registerAccountType">
+                                        <option value="job_seeker">Job Seeker</option>
+                                        <option value="employer">Employer</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="registerTerms" required>
+                                    <label class="form-check-label" for="registerTerms">
+                                        I agree to the <a href="#terms" class="text-accent">Terms & Conditions</a>
+                                    </label>
+                                </div>
+                                <button class="btn btn-primary w-100" id="registerSubmit">Create Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal
+        const existing = document.getElementById('authModal');
+        if (existing) existing.remove();
+        
+        // Add modal
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Initialize modal functionality
+        this.initAuthModal();
+    }
+    
+    // Initialize auth modal
+    initAuthModal() {
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                document.querySelectorAll('.auth-tab').forEach(t => 
+                    t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding form
+                const tabName = tab.dataset.tab;
+                document.getElementById('loginForm').style.display = 
+                    tabName === 'login' ? 'block' : 'none';
+                document.getElementById('registerForm').style.display = 
+                    tabName === 'register' ? 'block' : 'none';
+            });
+        });
+        
+        // Close modal
+        document.querySelector('.close-auth-modal').addEventListener('click', () => {
+            document.getElementById('authModal').remove();
+        });
+        
+        // Close on outside click
+        document.getElementById('authModal').addEventListener('click', (e) => {
+            if (e.target.id === 'authModal') {
+                document.getElementById('authModal').remove();
+            }
+        });
+        
+        // Login submit
+        document.getElementById('loginSubmit').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const accountType = document.getElementById('loginAccountType').value;
+            
+            try {
+                await this.login(email, password, accountType);
+            } catch (error) {
+                // Error already shown by login method
+            }
+        });
+        
+        // Register submit
+        document.getElementById('registerSubmit').addEventListener('click', async () => {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const accountType = document.getElementById('registerAccountType').value;
+            const terms = document.getElementById('registerTerms').checked;
+            
+            // Validate
+            if (password !== confirmPassword) {
+                this.showNotification('Password Mismatch', 'Passwords do not match.', 'error');
+                return;
+            }
+            
+            if (!terms) {
+                this.showNotification('Terms Required', 'Please agree to the terms and conditions.', 'error');
+                return;
+            }
+            
+            try {
+                await this.register({ name, email, password, accountType });
+            } catch (error) {
+                // Error already shown by register method
+            }
+        });
+    }
+    
+    // Close login modal
+    closeLoginModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.remove();
+    }
+    
+    // Setup event listeners
+    setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            // Login button
+            if (e.target.closest('.login-btn')) {
+                e.preventDefault();
+                this.showLoginModal();
+            }
+            
+            // Logout from anywhere
+            if (e.target.closest('.logout-btn')) {
+                e.preventDefault();
+                this.logout();
+            }
+        });
+    }
+    
+    // Show loading state
+    showLoading(show) {
+        const loadingEl = document.getElementById('globalLoading');
+        
+        if (show) {
+            if (!loadingEl) {
+                const loadingHTML = `
+                    <div id="globalLoading" class="loading-overlay">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                            <p class="mt-3">Loading...</p>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', loadingHTML);
+                
+                // Add styles
+                this.addLoadingStyles();
+            }
+        } else {
+            if (loadingEl) {
+                loadingEl.remove();
+            }
+        }
+    }
+    
+    // Add loading styles
+    addLoadingStyles() {
+        if (!document.getElementById('loading-styles')) {
+            const styles = `
+                <style>
+                    .loading-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(255,255,255,0.9);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                    }
+                    .loading-spinner {
+                        text-align: center;
+                    }
+                </style>
+            `;
+            document.head.insertAdjacentHTML('beforeend', styles);
+        }
+    }
+    
+    // Show notification
+    showNotification(title, message, type = 'info') {
+        if (window.jobPortal) {
+            window.jobPortal.showNotification(title, message, type);
+        } else {
+            // Fallback
+            alert(`${title}: ${message}`);
+        }
+    }
+}
+
+// Export for global use
+window.AuthManager = AuthManager;
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.jobPortal) {
+        window.jobPortal.authManager = new AuthManager();
+    }
+});
