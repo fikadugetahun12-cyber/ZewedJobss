@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Job Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .chat-container {
+            height: 70vh;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+        }
+        .user-message {
+            margin-left: auto;
+            background-color: #2563eb;
+            color: white;
+            border-radius: 15px 15px 5px 15px;
+        }
+        .bot-message {
+            background-color: white;
+            color: #333;
+            border-radius: 15px 15px 15px 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .typing-indicator {
+            display: inline-block;
+        }
+        .typing-indicator span {
+            animation: typing 1.4s infinite;
+            display: inline-block;
+            margin: 0 1px;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/logos/logo-192.png" alt="Logo" height="40">
+            </a>
+            <h4 class="mb-0">AI Career Assistant</h4>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <!-- Chat Area -->
+            <div class="col-lg-8">
+                <div class="chat-container mb-3" id="chatBox">
+                    <!-- Messages will be inserted here -->
+                    <div class="message bot-message p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="assets/images/bot-avatar.png" alt="AI" class="avatar me-2">
+                            <strong>CareerBot</strong>
+                        </div>
+                        <p>Hello! I'm your AI Career Assistant. How can I help you today?</p>
+                        <p>You can ask me about:</p>
+                        <ul>
+                            <li>Job search tips</li>
+                            <li>Resume writing</li>
+                            <li>Interview preparation</li>
+                            <li>Career guidance</li>
+                            <li>Skill development</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="userInput" 
+                           placeholder="Type your question here..." 
+                           onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button class="btn btn-primary" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Questions -->
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-2">Try asking:</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="quickQuestion('How to write a good resume?')">
+                            Resume tips
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="quickQuestion('What are in-demand skills?')">
+                            In-demand skills
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="quickQuestion('How to prepare for interview?')">
+                            Interview prep
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Assistant Capabilities</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Resume review</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Job matching</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Interview practice</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Career path guidance</li>
+                        </ul>
+                        <hr>
+                        <small class="text-muted">
+                            Note: This is an AI assistant. For complex issues, contact our support team.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+
+        const responses = {
+            'resume': "For a good resume:\n1. Keep it 1-2 pages\n2. Use action verbs\n3. Quantify achievements\n4. Tailor for each job\n5. Check for errors",
+            'interview': "Interview preparation:\n1. Research the company\n2. Practice common questions\n3. Prepare your questions\n4. Dress appropriately\n5. Arrive early",
+            'skills': "In-demand skills:\n• Digital literacy\n• Communication\n• Problem-solving\n• AI/ML basics\n• Project management",
+            'default': "I can help you with career advice. Try asking about resumes, interviews, or skills development."
+        };
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            // Show typing indicator
+            showTyping();
+
+            // Simulate AI response after delay
+            setTimeout(() => {
+                removeTyping();
+                const response = getAIResponse(message);
+                addMessage(response, 'bot');
+            }, 1000);
+        }
+
+        function quickQuestion(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message p-3`;
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="assets/images/bot-avatar.png" alt="AI" class="avatar me-2">
+                        <strong>CareerBot</strong>
+                    </div>
+                    <p style="white-space: pre-line">${text}</p>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-end mb-2">
+                        <strong>You</strong>
+                        <img src="assets/images/placeholder.jpg" alt="User" class="avatar ms-2">
+                    </div>
+                    <p>${text}</p>
+                `;
+            }
+            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message bot-message p-3';
+            typingDiv.innerHTML = `
+                <div class="d-flex align-items-center mb-2">
+                    <img src="assets/images/bot-avatar.png" alt="AI" class="avatar me-2">
+                    <strong>CareerBot</strong>
+                </div>
+                <div class="typing-indicator">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>
+            `;
+            chatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        function getAIResponse(message) {
+            message = message.toLowerCase();
+            if (message.includes('resume')) return responses.resume;
+            if (message.includes('interview')) return responses.interview;
+            if (message.includes('skill')) return responses.skills;
+            return responses.default;
+        }
+
+        // Enter key support
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
